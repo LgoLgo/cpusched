@@ -14,4 +14,4 @@ run: build
 debug: build
 	rm cpusched
 	go build -o cpusched
-	./cpusched -n 100 -total 5000 -resol 1000
+	./cpusched -n 15 -total 10000 -resol 1000

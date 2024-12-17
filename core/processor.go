@@ -35,6 +35,11 @@ func (p *Processor) Execute() error {
 	fmt.Printf("Sampling interval: %d ms\n", p.Resol)
 	fmt.Printf("Start time: %s\n\n", p.Start.Format(time.RFC3339Nano))
 
+	fmt.Printf("Estimating workload which takes just one millisecond...\n")
+	loopsPerMs := loopsPerMsec()
+	fmt.Printf("Loops per millisecond: %d\n", loopsPerMs)
+	fmt.Printf("Loops per interval: %d\n\n", loopsPerMs*p.Resol)
+
 	fmt.Printf("%-10s %-10s %-15s %-15s %-30s\n", "Worker ID", "PID", "Elapsed (ms)", "Progress (%)", "Current Time")
 
 	errChan := make(chan error, p.N)
@@ -80,6 +85,9 @@ func (p *Processor) WorkerMain(id int, total, resol int64, start time.Time) {
 	pid := os.Getpid()
 	defer ticker.Stop()
 
+	loopsPerMs := loopsPerMsec()
+	loopsPerInterval := loopsPerMs * resol
+
 	for {
 		select {
 		case <-ticker.C:
@@ -90,10 +98,27 @@ func (p *Processor) WorkerMain(id int, total, resol int64, start time.Time) {
 				progress = 100
 			}
 			fmt.Printf("%-10d %-10d %-15d %-15.2f %-30s\n", id, pid, elapsed, progress, now.Format(time.RFC3339Nano))
+
+			for i := int64(0); i < loopsPerInterval; i++ {
+				// Do nothing
+			}
 		default:
 			if time.Now().After(end) {
 				return
 			}
 		}
 	}
+}
+
+const (
+	NloopForEstimation = 1000000000
+)
+
+func loopsPerMsec() int64 {
+	start := time.Now()
+	for i := 0; i < NloopForEstimation; i++ {
+		// Do nothing
+	}
+	elapsed := time.Since(start)
+	return NloopForEstimation * int64(time.Millisecond) / elapsed.Nanoseconds()
 }
