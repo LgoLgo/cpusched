@@ -1,3 +1,3 @@
-module github.com/LgoLgo
+module github.com/LgoLgo/cpusched
 
-go 1.18
+go 1.23.4

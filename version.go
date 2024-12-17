@@ -1,7 +1,6 @@
-package LgoLgo
+package main
 
-// Name and Version info of this framework, used for statistics and debug
 const (
-	Name    = "LgoLgo"
+	Name    = "cpusched"
 	Version = "v0.0.1"
 )

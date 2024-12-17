@@ -1,8 +1,6 @@
-# .github
+<h1 align="center">cpushed</h1>
 
-English | [中文](README_zh.md)
-
-Money is cheap, show me the code.
+<p align="center">CPU scheduling behavior analysis tool</p>
 
 ## License
 
