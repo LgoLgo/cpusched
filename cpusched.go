@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"time"
 
 	"github.com/LgoLgo/cpusched/core"
 )
@@ -15,7 +14,6 @@ var (
 	help   *bool
 	worker *bool
 	id     *int
-	start  *int64
 )
 
 func init() {
@@ -28,7 +26,6 @@ func init() {
 	// Flags for worker mode
 	worker = flag.Bool("worker", false, "Run in worker mode")
 	id = flag.Int("id", 0, "Worker ID")
-	start = flag.Int64("start", 0, "Start time in nanoseconds")
 }
 
 func main() {
@@ -43,9 +40,8 @@ func main() {
 
 	// Check if running in worker mode
 	if *worker {
-		startTime := time.Unix(0, *start)
 		processor := &core.Processor{}
-		processor.WorkerMain(*id, *total, *resol, startTime)
+		processor.WorkerMain(*id, *total, *resol)
 		return
 	}
 
@@ -54,7 +50,6 @@ func main() {
 		N:     *n,
 		Total: *total,
 		Resol: *resol,
-		Start: time.Now(),
 	}
 
 	// Check parameters

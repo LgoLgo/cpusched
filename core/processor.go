@@ -13,7 +13,6 @@ type Processor struct {
 	N     int
 	Total int64
 	Resol int64
-	Start time.Time
 	Wg    sync.WaitGroup
 }
 
@@ -29,11 +28,12 @@ func (p *Processor) Check() error {
 }
 
 func (p *Processor) Execute() error {
+	start := time.Now()
 	fmt.Printf("Starting CPU scheduling experiment\n")
 	fmt.Printf("Number of processes: %d\n", p.N)
 	fmt.Printf("Total runtime: %d ms\n", p.Total)
 	fmt.Printf("Sampling interval: %d ms\n", p.Resol)
-	fmt.Printf("Start time: %s\n\n", p.Start.Format(time.RFC3339Nano))
+	fmt.Printf("Start time: %s\n\n", start.Format(time.RFC3339Nano))
 
 	fmt.Printf("Estimating workload which takes just one millisecond...\n")
 	loopsPerMs := loopsPerMsec()
@@ -56,7 +56,7 @@ func (p *Processor) Execute() error {
 	}
 
 	fmt.Printf("\nExperiment completed at %s\n", time.Now().Format(time.RFC3339Nano))
-	fmt.Printf("Total duration: %s\n", time.Since(p.Start))
+	fmt.Printf("Total duration: %s\n", time.Since(start))
 	return nil
 }
 
@@ -70,8 +70,7 @@ func (p *Processor) runWorker(id int) error {
 		"-worker",
 		"-id", strconv.Itoa(id),
 		"-total", strconv.FormatInt(p.Total, 10),
-		"-resol", strconv.FormatInt(p.Resol, 10),
-		"-start", strconv.FormatInt(p.Start.UnixNano(), 10))
+		"-resol", strconv.FormatInt(p.Resol, 10))
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -79,34 +78,50 @@ func (p *Processor) runWorker(id int) error {
 	return cmd.Run()
 }
 
-func (p *Processor) WorkerMain(id int, total, resol int64, start time.Time) {
+func (p *Processor) WorkerMain(id int, total, resol int64) {
+	loopsPerMs := loopsPerMsec()
+	loopsPerInterval := loopsPerMs * resol
+
+	start := time.Now()
 	end := start.Add(time.Duration(total) * time.Millisecond)
 	ticker := time.NewTicker(time.Duration(resol) * time.Millisecond)
 	pid := os.Getpid()
 	defer ticker.Stop()
-
-	loopsPerMs := loopsPerMsec()
-	loopsPerInterval := loopsPerMs * resol
 
 	for {
 		select {
 		case <-ticker.C:
 			now := time.Now()
 			elapsed := now.Sub(start).Milliseconds()
-			progress := float64(elapsed) / float64(total) * 100
-			if progress > 100 {
-				progress = 100
+			progress := calculateProgress(elapsed, total)
+			printProgress(id, pid, elapsed, progress, now)
+			if progress >= 100 {
+				return
 			}
-			fmt.Printf("%-10d %-10d %-15d %-15.2f %-30s\n", id, pid, elapsed, progress, now.Format(time.RFC3339Nano))
-
-			for i := int64(0); i < loopsPerInterval; i++ {
-				// Do nothing
-			}
+			performWork(loopsPerInterval)
 		default:
 			if time.Now().After(end) {
 				return
 			}
 		}
+	}
+}
+
+func calculateProgress(elapsed, total int64) float64 {
+	progress := float64(elapsed) / float64(total) * 100
+	if progress > 100 {
+		return 100
+	}
+	return progress
+}
+
+func printProgress(id, pid int, elapsed int64, progress float64, now time.Time) {
+	fmt.Printf("%-10d %-10d %-15d %-15.2f %-30s\n", id, pid, elapsed, progress, now.Format(time.RFC3339Nano))
+}
+
+func performWork(loopsPerInterval int64) {
+	for i := int64(0); i < loopsPerInterval; i++ {
+		// Do nothing
 	}
 }
 
