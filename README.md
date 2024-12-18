@@ -30,7 +30,7 @@ $ ./cpusched -n 24 -total 1000 -resol 10
 
 ### 实验逻辑
 
-![img.png](流程图.png)
+![img.png](img/流程图.png)
 
 1. 程序启动后，首先解析命令行参数。
 2. 如果是工作进程模式（-worker），则直接执行工作进程逻辑：
