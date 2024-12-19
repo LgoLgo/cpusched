@@ -7,11 +7,16 @@ delete:
 	rm cpusched
 
 .PHONY: run
-run: build
+run:
 	./cpusched
 
 .PHONY: debug
-debug: build
+debug:
 	rm cpusched
 	go build -o cpusched
-	./cpusched -n 24 -total 1000 -resol 10
+	./cpusched -n 10 -total 1000 -resol 100 > res1.txt
+	python3 print.py 1
+	./cpusched -n 20 -total 1000 -resol 100 > res2.txt
+	python3 print.py 2
+	./cpusched -n 30 -total 1000 -resol 100 > res3.txt
+	python3 print.py 3

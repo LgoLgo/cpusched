@@ -33,12 +33,13 @@ func (p *Processor) Execute() error {
 	fmt.Printf("Number of processes: %d\n", p.N)
 	fmt.Printf("Total runtime: %d ms\n", p.Total)
 	fmt.Printf("Sampling interval: %d ms\n", p.Resol)
-	fmt.Printf("Start time: %s\n\n", start.Format(time.RFC3339Nano))
 
-	fmt.Printf("Estimating workload which takes just one millisecond...\n")
 	loopsPerMs := loopsPerMsec()
 	fmt.Printf("Loops per millisecond: %d\n", loopsPerMs)
-	fmt.Printf("Loops per interval: %d\n\n", loopsPerMs*p.Resol)
+	fmt.Printf("Loops per interval: %d\n", loopsPerMs*p.Resol)
+	fmt.Printf("Estimating workload which takes just one millisecond...\n")
+
+	fmt.Printf("Start time: %s\n\n", start.Format(time.RFC3339Nano))
 
 	fmt.Printf("%-10s %-10s %-15s %-15s %-30s\n", "Worker ID", "PID", "Elapsed (ms)", "Progress (%)", "Current Time")
 
@@ -82,41 +83,30 @@ func (p *Processor) WorkerMain(id int, total, resol int64) {
 	loopsPerMs := loopsPerMsec()
 	loopsPerInterval := loopsPerMs * resol
 
-	start := time.Now()
-	end := start.Add(time.Duration(total) * time.Millisecond)
 	ticker := time.NewTicker(time.Duration(resol) * time.Millisecond)
-	pid := os.Getpid()
 	defer ticker.Stop()
+	cpuRestTime := total
 
 	for {
 		select {
 		case <-ticker.C:
-			now := time.Now()
-			elapsed := now.Sub(start).Milliseconds()
-			progress := calculateProgress(elapsed, total)
-			printProgress(id, pid, elapsed, progress, now)
-			if progress >= 100 {
+			fmt.Printf("%-10d %-10d %-15d %-15.2f %-30s\n", id, os.Getpid(), total-cpuRestTime, calculateProgress(total-cpuRestTime, total), time.Now().Format(time.RFC3339Nano))
+		default:
+			if cpuRestTime <= 0 {
 				return
 			}
 			performWork(loopsPerInterval)
-		default:
-			if time.Now().After(end) {
-				return
-			}
+			cpuRestTime -= resol
 		}
 	}
 }
 
 func calculateProgress(elapsed, total int64) float64 {
 	progress := float64(elapsed) / float64(total) * 100
-	if progress > 100 {
+	if progress >= 100 {
 		return 100
 	}
 	return progress
-}
-
-func printProgress(id, pid int, elapsed int64, progress float64, now time.Time) {
-	fmt.Printf("%-10d %-10d %-15d %-15.2f %-30s\n", id, pid, elapsed, progress, now.Format(time.RFC3339Nano))
 }
 
 func performWork(loopsPerInterval int64) {

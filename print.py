@@ -2,13 +2,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.font_manager import FontProperties
+import sys
+
+# 检查命令行参数
+if len(sys.argv) != 2:
+    print("使用方法: python print.py <数字>")
+    sys.exit(1)
+
+# 获取命令行参数
+file_number = sys.argv[1]
 
 # 设置中文字体
 font = FontProperties(fname='/System/Library/Fonts/STHeiti Light.ttc', size=10)
 
 # 读取数据
 data = []
-with open('res.txt', 'r') as file:
+with open(f'res{file_number}.txt', 'r') as file:
     for line in file:
         parts = line.strip().split()
         if len(parts) == 5:
@@ -39,7 +48,7 @@ plt.ylabel('进程编号', fontproperties=font)
 plt.title('进程执行时间图', fontproperties=font)
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', prop=font)
 plt.tight_layout()
-plt.savefig('img/进程执行时间图.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'img/进程执行时间图{file_number}.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 # 图2：横坐标为相对时间，纵坐标为进度
@@ -53,7 +62,7 @@ plt.ylabel('进度', fontproperties=font)
 plt.title('进程进度图', fontproperties=font)
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', prop=font)
 plt.tight_layout()
-plt.savefig('img/进程进度图.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'img/进程进度图{file_number}.png', dpi=300, bbox_inches='tight')
 plt.close()
 
-print("图表已生成：进程执行时间图.png 和 进程进度图.png")
+print(f"图表已生成：进程执行时间图{file_number}.png 和 进程进度图{file_number}.png")
