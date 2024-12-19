@@ -67,8 +67,6 @@ $ python3 print.py ${file_num}
 4. 进程进度图 N=30：
    ![进程进度图](img/进程进度图3.png)
 
-可以看到，当 CPU 核心数量增加时，CPU 调度策略的变化更加明显。当然 Go 本身的调度策略也会产生影响。
-
 ## 证书
 
 Apache License 2.0.
